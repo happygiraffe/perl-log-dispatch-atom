@@ -1,0 +1,15 @@
+---
+name: Log-Dispatch-Atom
+version: 0.01
+author:
+  - Dominic Mitchell <cpan (at) happygiraffe.net>
+abstract: Log to an atom feed.
+license: bsd
+requires:
+  Test::More: 0
+  XML::Atom: 0.15
+provides:
+  Log::Dispatch::Atom:
+    file: lib/Log/Dispatch/Atom.pm
+    version: 0.01
+generated_by: Module::Build version 0.2611
