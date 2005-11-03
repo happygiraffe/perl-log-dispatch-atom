@@ -9,6 +9,7 @@ use strict;
 
 use Carp qw( carp croak );
 use Fcntl qw( :flock );
+use POSIX qw( strftime );
 use Params::Validate;
 use XML::Atom 0.15;    # We need add_entry(mode=>insert).
 use XML::Atom::Entry;
@@ -38,6 +39,8 @@ sub _init {
     $self->{ feed_title } = $p{ feed_title } if $p{feed_title};
     return;
 }
+
+sub _now { strftime "%Y-%m-%dT%H:%M:%SZ", gmtime }
 
 sub log_message {
     my $self = shift;
@@ -79,6 +82,11 @@ sub _new_entry {
     my $entry = XML::Atom::Entry->new( Version => '1.0' );
     $entry->title( "$args->{message}" );
     $entry->content( "$args->{message}" );
+
+    my $now = _now();
+    $feed->updated( $now );
+    $entry->updated( $now );
+
     $feed->add_entry( $entry, { mode => 'insert' } );
     return $entry;
 }

@@ -5,12 +5,14 @@ use strict;
 use warnings;
 
 use File::Temp qw( tempfile );
+use Log::Dispatch::Atom;
+use POSIX qw( strftime );
 use Test::More 'no_plan';
 use XML::Atom::Feed;
-use Log::Dispatch::Atom;
 
 test_basics();
 test_feed_extras();
+test_timestamps();
 
 sub test_basics {
     my $fn  = tempfilename();
@@ -62,6 +64,28 @@ sub test_feed_extras {
     is( $feed->title, 'My Test Log', 'test_feed_extras: title' )
         or diag( slurp( $fn ) );
     is( $feed->id, 'http://example.com/log/', 'test_feed_extras: id' );
+    return;
+}
+
+sub test_timestamps {
+    my $fn  = tempfilename();
+    my $log = Log::Dispatch::Atom->new(
+        name      => 'test_timestamps',
+        min_level => 'debug',
+        file      => $fn,
+    );
+    isa_ok( $log, 'Log::Dispatch::Atom' );
+
+    my $now = strftime "%Y-%m-%dT%H:%M:%SZ", gmtime;
+    $log->log( level => 'debug', message => 'Got Here' );
+    my $feed = eval { XML::Atom::Feed->new( $fn ) };
+    is( $@, '', 'test_timestamps: No problems parsing feed.' );
+    is( $feed->updated, $now,
+        'test_timestamps: feed has correct updated time.' );
+
+    my @entries = $feed->entries;
+    is( scalar( @entries ), 1, 'test_timestamps: produced 1 entry' );
+    is( $entries[0]->updated, $now, 'test_timestamps: entry has correct time' );
     return;
 }
 
