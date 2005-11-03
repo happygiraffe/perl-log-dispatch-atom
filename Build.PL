@@ -1,5 +1,9 @@
+#!perl
+# @(#) $Id$
+
 use strict;
 use warnings;
+
 use Module::Build;
 
 Module::Build->new(
@@ -10,8 +14,10 @@ Module::Build->new(
     add_to_cleanup     => ['Log-Dispatch-Atom-*'],
     create_makefile_pl => 'passthrough',
     requires           => {
-        'Test::More' => 0,
-        # We need this version to get proper insert mode working.
-        'XML::Atom' => '0.15',
+        'Log::Dispatch::Output' => 0,
+        'Test::More'            => 0,
+        'XML::Atom'             => '0.15', # needed for insert mode.
     },
 )->create_build_script();
+
+# vim: set ai et sw=4 :

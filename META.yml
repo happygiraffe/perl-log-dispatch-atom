@@ -6,6 +6,7 @@ author:
 abstract: Log to an atom feed.
 license: bsd
 requires:
+  Log::Dispatch::Output: 0
   Test::More: 0
   XML::Atom: 0.15
 provides:

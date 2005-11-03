@@ -9,26 +9,43 @@ use strict;
 
 use Carp qw( carp croak );
 use Fcntl qw( :flock );
+use Params::Validate;
 use XML::Atom 0.15;    # We need add_entry(mode=>insert).
 use XML::Atom::Entry;
 use XML::Atom::Feed;
 
+use base qw( Log::Dispatch::Output );
+
+# We don't want complaints about this; classes below will check the
+# remaining args.
+Params::Validate::validation_options( allow_extra => 1 );
+
 sub new {
     my $class = shift;
-    my %args  = @_;
-    croak "usage: new(file=>'filename')" unless $args{ file };
-    return bless \%args, $class;
+    my %p     = @_;
+
+    my $self = bless {}, $class;
+    $self->_basic_init( %p );
+    $self->_init( %p );
+    return $self;
 }
 
-sub log {
+sub _init {
     my $self = shift;
-    my %args = @_;
-    croak "usage: log(message=>'message')"
-        unless defined $args{ message };
+    my %p = validate( @_, { file => 1, feed_id => 0, feed_title => 0 } );
+    $self->{ file } = $p{ file };
+    $self->{ feed_id } = $p{ feed_id } if $p{ feed_id };
+    $self->{ feed_title } = $p{ feed_title } if $p{feed_title};
+    return;
+}
+
+sub log_message {
+    my $self = shift;
+    my %p = @_;
     my $fh = eval {
         my $fh    = $self->_lock_and_open();
         my $feed  = $self->_get_feed_from_handle( $fh );
-        $self->_new_entry( $feed, \%args );
+        $self->_new_entry( $feed, \%p );
         $self->_write_feed( $fh, $feed );
         return $fh;
     };
@@ -111,14 +128,29 @@ This document describes Log::Dispatch::Atom version 0.01
 
     use Log::Dispatch::Atom;
 
-    my $log = Log::Dispatch::Atom->new( file => 'file.atom' );
-    $log->log( message => 'A problem happened' );
-    $log->log( message => 'Another problem happened' );
+    my $log = Log::Dispatch::Atom->new(
+        name      => 'foo',
+        min_level => 'debug',
+        file      => 'file.atom'
+    );
+    $log->log_message( level => 'error', message => 'A problem happened' );
+    $log->log_message( level => 'debug', message => 'Got Here' );
 
 =head1 DESCRIPTION
 
 This class implements logging backed by an Atom feed so that you can
 subscribe to the errors produced by your application.
+
+You should not use this object directly, but should manage it via a
+L<Log::Dispatch> object.
+
+=head1 IMPLEMENTATION NOTES
+
+In order to safely write to the log file, the entire file must be locked
+each time that an entry is logged.  This probably makes it unsuitable
+for high volume log files.
+
+The log file is opened and closed on each call to log_message().
 
 =head1 METHODS
 
@@ -126,10 +158,25 @@ subscribe to the errors produced by your application.
 
 =item new()
 
-Takes a hash of arguments.  Returns a new Log::Dispatch::Atom object.  The
-following parameters are used:
+Takes a hash of arguments.  Returns a new Log::Dispatch::Atom object.
+The following parameters are used:
 
 =over 4
+
+=item I<name> [mandatory]
+
+The name of the logging object.
+
+=item I<min_level> [mandatory]
+
+The minimum logging level this object will accept.  See L<Log::Dispatch>
+for more information.
+
+=item I<max_level> [optional]
+
+The maximum logging level this object will accept.  See L<Log::Dispatch>
+for more information.  The default is the highest possible level (ie: no
+maximum).
 
 =item I<file> [mandatory]
 
@@ -153,9 +200,11 @@ If not specified, it will be omitted, which is in violation of the
 Atom specification.  For more information, see
 L<http://www.atomenabled.org/developers/syndication/#requiredFeedElements>.
 
+B<XXX> This should probably just use the I<name> parameter.
+
 =back
 
-=item log()
+=item log_message()
 
 Takes a hash of arguments.  Has no return value.  The following
 parameters are used.
@@ -166,23 +215,11 @@ parameters are used.
 
 The actual log message.
 
-=back
+=item I<level> [mandatory]
+
+The level of the message.  See L<Log::Dispatch> for a full list.
 
 =back
-
-=head1 DIAGNOSTICS
-
-=over
-
-=item C<< Error message here, perhaps with %s placeholders >>
-
-[Description of error here]
-
-=item C<< Another error message here >>
-
-[Description of error here]
-
-[Et cetera, et cetera]
 
 =back
 
@@ -195,7 +232,7 @@ L<http://www.atomenabled.org/developers/syndication/>.
 
 =head1 DEPENDENCIES
 
-L<XML::Atom> version 0.14.
+L<XML::Atom> version 0.15.
 
 This module uses flock() to the lock the feed file whilst it's writing,
 so your version of Perl will need support for that.
