@@ -1,6 +1,6 @@
 ---
 name: Log-Dispatch-Atom
-version: 0.01
+version: 0.02
 author:
   - Dominic Mitchell <cpan (at) happygiraffe.net>
 abstract: Log to an atom feed.
@@ -12,5 +12,5 @@ requires:
 provides:
   Log::Dispatch::Atom:
     file: lib/Log/Dispatch/Atom.pm
-    version: 0.01
+    version: 0.02
 generated_by: Module::Build version 0.2611
