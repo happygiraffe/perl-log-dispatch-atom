@@ -16,7 +16,8 @@ To install this module, run the following commands:
 
 DEPENDENCIES
 
-XML::Atom 0.15 or later
+* XML::Atom 0.15 or later
+* Log::Dispatch (any version)
 
 COPYRIGHT AND LICENCE
 
