@@ -50,11 +50,16 @@ sub test_basics {
 sub test_feed_extras {
     my $fn  = tempfilename();
     my $log = Log::Dispatch::Atom->new(
-        name       => 'test_feed_extras',
-        min_level  => 'debug',
-        file       => $fn,
-        feed_title => 'My Test Log',
-        feed_id    => 'http://example.com/log/',
+        name        => 'test_feed_extras',
+        min_level   => 'debug',
+        file        => $fn,
+        feed_title  => 'My Test Log',
+        feed_id     => 'http://example.com/log/',
+        feed_author => {
+            name  => 'Fred Flintstone',
+            email => 'fred@flintstones.com',
+            uri   => 'http://fred.flintstones.com/',
+        },
     );
     isa_ok( $log, 'Log::Dispatch::Atom' );
 
@@ -64,6 +69,13 @@ sub test_feed_extras {
     is( $feed->title, 'My Test Log', 'test_feed_extras: title' )
         or diag( slurp( $fn ) );
     is( $feed->id, 'http://example.com/log/', 'test_feed_extras: id' );
+
+    isa_ok( $feed->author, 'XML::Atom::Person', 'test_feed_extras: author' );
+    is(
+        $feed->author->name,
+        'Fred Flintstone',
+        'test_feed_extras: author/name',
+    );
     return;
 }
 

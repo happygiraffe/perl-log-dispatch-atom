@@ -14,6 +14,7 @@ use Params::Validate;
 use XML::Atom 0.15;    # We need add_entry(mode=>insert).
 use XML::Atom::Entry;
 use XML::Atom::Feed;
+use XML::Atom::Person;
 
 use base qw( Log::Dispatch::Output );
 
@@ -33,10 +34,19 @@ sub new {
 
 sub _init {
     my $self = shift;
-    my %p = validate( @_, { file => 1, feed_id => 0, feed_title => 0 } );
-    $self->{ file } = $p{ file };
-    $self->{ feed_id } = $p{ feed_id } if $p{ feed_id };
-    $self->{ feed_title } = $p{ feed_title } if $p{feed_title};
+    my %p    = validate(
+        @_,
+        {
+            file        => 1,
+            feed_id     => 0,
+            feed_title  => 0,
+            feed_author => 0,
+        }
+    );
+    $self->{ file }        = $p{ file };
+    $self->{ feed_id }     = $p{ feed_id } if $p{ feed_id };
+    $self->{ feed_title }  = $p{ feed_title } if $p{ feed_title };
+    $self->{ feed_author } = $p{ feed_author } if $p{ feed_author };
     return;
 }
 
@@ -70,8 +80,14 @@ sub _get_feed_from_handle {
     else {
         # Create a new feed.
         my $feed = XML::Atom::Feed->new( Version => '1.0' );
-        $feed->id( $self->{ feed_id } ) if $self->{ feed_id };
+        $feed->id( $self->{ feed_id } )       if $self->{ feed_id };
         $feed->title( $self->{ feed_title } ) if $self->{ feed_title };
+        if ( $self->{ feed_author } ) {
+            my $author = XML::Atom::Person->new( Version => '1.0' );
+            $author->name( $self->{ feed_author }{ name } )
+                if $self->{ feed_author }{ name };
+            $feed->author( $author );
+        }
         return $feed;
     }
 }
