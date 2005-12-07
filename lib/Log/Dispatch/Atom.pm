@@ -267,6 +267,10 @@ this parameter be supplied.
 
 =back
 
+B<NB>:  The I<feed_*> parameters will only be used when a new feed is
+being created.  If you are creating a new object for an existing feed,
+they will be ignored.
+
 =item log_message()
 
 Takes a hash of arguments.  Has no return value.  The following
