@@ -93,22 +93,29 @@ sub _get_feed_from_handle {
         return XML::Atom::Feed->new( $fh );
     }
     else {
-        # Create a new feed.
-        my $feed = XML::Atom::Feed->new( Version => '1.0' );
-        $feed->id( $self->{ feed_id } )       if $self->{ feed_id };
-        $feed->title( $self->{ feed_title } ) if $self->{ feed_title };
-        if ( $self->{ feed_author } ) {
-            my $author = XML::Atom::Person->new( Version => '1.0' );
-            $author->name( $self->{ feed_author }{ name } )
-                if $self->{ feed_author }{ name };
-            $author->email( $self->{ feed_author }{ email } )
-                if $self->{ feed_author }{ email };
-            $author->uri( $self->{ feed_author }{ uri } )
-                if $self->{ feed_author }{ uri };
-            $feed->author( $author );
-        }
-        return $feed;
+        return $self->_new_feed();
     }
+}
+
+sub _new_feed {
+    my $self = shift;
+    my $feed = XML::Atom::Feed->new( Version => '1.0' );
+    $feed->id( $self->{ feed_id } )       if $self->{ feed_id };
+    $feed->title( $self->{ feed_title } ) if $self->{ feed_title };
+    if ( my $author = $self->{ feed_author } ) {
+        $feed->author( $self->_new_person( $author ) );
+    }
+    return $feed;
+}
+
+sub _new_person {
+    my $self     = shift;
+    my ( $args ) = @_;
+    my $person   = XML::Atom::Person->new( Version => '1.0' );
+    $person->name( $args->{ name } )   if $args->{ name };
+    $person->email( $args->{ email } ) if $args->{ email };
+    $person->uri( $args->{ uri } )     if $args->{ uri };
+    return $person;
 }
 
 sub _new_entry {
