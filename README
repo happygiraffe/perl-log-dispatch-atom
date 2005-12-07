@@ -1,4 +1,4 @@
-Log-Dispatch-Atom version 0.01
+Log-Dispatch-Atom version 0.03
 
 This module extends Log::Dispatch to allow logging to an Atom feed.
 That feed can then be picked up by a feed reader program.
