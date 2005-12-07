@@ -34,7 +34,7 @@ sub test_basics {
     is( $entries[0]->title, 'hello world', 'log(1) made correct title' );
     is( $entries[0]->content->body,
         'hello world', 'log(1) made correct content' );
-    my $expected_id = join "/", hostname(), $now, $$, 1;
+    my $expected_id = "tag:" . join "/", hostname(), $now, $$, 1;
     is( $entries[0]->id, $expected_id, 'log(1) made correct id' );
 
     $now = time;
@@ -49,7 +49,7 @@ sub test_basics {
         'hello world#2',
         'log(2) made correct content'
     );
-    $expected_id = join "/", hostname(), $now, $$, 2;
+    $expected_id = "tag:" . join "/", hostname(), $now, $$, 2;
     is( $entries[0]->id, $expected_id, 'log(2) made correct id' );
     return;
 }
