@@ -53,7 +53,8 @@ sub _init {
     return;
 }
 
-sub _now { strftime "%Y-%m-%dT%H:%M:%SZ", gmtime }
+sub _now_datetime { strftime "%Y-%m-%dT%H:%M:%SZ", gmtime }
+sub _now_date     { strftime "%Y-%m-%d", gmtime }
 
 sub log_message {
     my $self = shift;
@@ -78,7 +79,8 @@ sub log_message {
     my $i;
     sub _default_id {
         my $self = shift;
-        return "tag:" . join "/", hostname(), time(), $$, ++$i;
+        return sprintf( "tag:%s,%s:%d/%d/%d",
+            hostname(), $self->_now_date(), time(), $$, ++$i );
     }
 }
 
@@ -117,7 +119,7 @@ sub _new_entry {
     $entry->content( "$args->{message}" );
     $entry->id( "$args->{id}" );
 
-    my $now = _now();
+    my $now = _now_datetime();
     $feed->updated( $now );
     $entry->updated( $now );
 
@@ -281,7 +283,8 @@ whether or not an entry has been seen previously.
 
 If not specified, this will default to an URL comprising the current
 time plus the pid plus the hostname plus a monotonically increasing
-integer.  eg: tag:fred.example.com/1133946771/20827/2
+integer.  eg: tag:fred.example.com,2005-12-07:1133946771/20827/2.  This
+should be good enough for a uniqueness test.
 
 =back
 
