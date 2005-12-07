@@ -71,7 +71,11 @@ sub test_feed_extras {
     );
     isa_ok( $log, 'Log::Dispatch::Atom' );
 
-    $log->log( level => 'info', message => 'hello world' );
+    $log->log(
+        level   => 'info',
+        message => 'hello world',
+        author  => { name => 'Barney' }
+    );
     my $feed = eval { XML::Atom::Feed->new( $fn ) };
     is( $@, '', 'test_feed_extras: No problems parsing feed.' );
     is( $feed->title, 'My Test Log', 'test_feed_extras: title' )
@@ -84,9 +88,7 @@ sub test_feed_extras {
         'Fred Flintstone',
         'test_feed_extras: author/name',
     );
-    is(
-        $feed->author->email,
-        'fred@flintstones.com',
+    is( $feed->author->email, 'fred@flintstones.com',
         'test_feed_extras: author/email',
     );
     is(
@@ -94,6 +96,11 @@ sub test_feed_extras {
         'http://fred.flintstones.com/',
         'test_feed_extras: author/uri',
     );
+
+    my ( $e1 ) = $feed->entries;
+    isa_ok( $e1->author, 'XML::Atom::Person',
+        'test_feed_extras: entry/author' );
+    is( $e1->author->name, 'Barney', 'test_feed_extras: entry/author/name' );
     return;
 }
 

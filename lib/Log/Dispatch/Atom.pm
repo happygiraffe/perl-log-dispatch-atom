@@ -58,8 +58,13 @@ sub _now_date     { strftime "%Y-%m-%d", gmtime }
 
 sub log_message {
     my $self = shift;
-    my %p    = @_;
-    $p{ id } ||= $self->_default_id;
+    my %p    = validate(
+        @_,
+        {
+            id     => { type => SCALAR,  default  => $self->_default_id },
+            author => { type => HASHREF, optional => 1 },
+        }
+    );
     my $fh = eval {
         my $fh   = $self->_lock_and_open();
         my $feed = $self->_get_feed_from_handle( $fh );
@@ -129,6 +134,10 @@ sub _new_entry {
     my $now = _now_datetime();
     $feed->updated( $now );
     $entry->updated( $now );
+
+    if ( $args->{ author } ) {
+        $entry->author( $self->_new_person( $args->{ author } ) );
+    }
 
     $feed->add_entry( $entry, { mode => 'insert' } );
     return $entry;
@@ -296,6 +305,12 @@ If not specified, this will default to an URL comprising the current
 time plus the pid plus the hostname plus a monotonically increasing
 integer.  eg: tag:fred.example.com,2005-12-07:1133946771/20827/2.  This
 should be good enough for a uniqueness test.
+
+=item I<author> [optional]
+
+You can specify author details for an individual entry if desired.  The
+author parameter is expected to be a hash reference, which must contain
+one or more of the keys I<name>, I<email> or I<uri>.
 
 =back
 
