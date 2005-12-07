@@ -10,7 +10,7 @@ use strict;
 use Carp qw( carp croak );
 use Fcntl qw( :flock );
 use POSIX qw( strftime );
-use Params::Validate;
+use Params::Validate qw( validate SCALAR HASHREF );
 use XML::Atom 0.15;    # We need add_entry(mode=>insert).
 use XML::Atom::Entry;
 use XML::Atom::Feed;
@@ -27,7 +27,9 @@ sub new {
     my %p     = @_;
 
     my $self = bless {}, $class;
+    # Log::Dispatch setup.
     $self->_basic_init( %p );
+    # Our setup.
     $self->_init( %p );
     return $self;
 }
@@ -37,10 +39,10 @@ sub _init {
     my %p    = validate(
         @_,
         {
-            file        => 1,
-            feed_id     => 0,
-            feed_title  => 0,
-            feed_author => 0,
+            file        => { type => SCALAR },
+            feed_id     => { type => SCALAR, optional => 1 },
+            feed_title  => { type => SCALAR, optional => 1 },
+            feed_author => { type => HASHREF, optional => 1 },
         }
     );
     $self->{ file }        = $p{ file };
