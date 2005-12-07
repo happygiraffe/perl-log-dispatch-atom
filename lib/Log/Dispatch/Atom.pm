@@ -11,6 +11,7 @@ use Carp qw( carp croak );
 use Fcntl qw( :flock );
 use POSIX qw( strftime );
 use Params::Validate qw( validate SCALAR HASHREF );
+use Sys::Hostname qw( hostname );
 use XML::Atom 0.15;    # We need add_entry(mode=>insert).
 use XML::Atom::Entry;
 use XML::Atom::Feed;
@@ -56,19 +57,29 @@ sub _now { strftime "%Y-%m-%dT%H:%M:%SZ", gmtime }
 
 sub log_message {
     my $self = shift;
-    my %p = @_;
+    my %p    = @_;
+    $p{ id } ||= $self->_default_id;
     my $fh = eval {
-        my $fh    = $self->_lock_and_open();
-        my $feed  = $self->_get_feed_from_handle( $fh );
+        my $fh   = $self->_lock_and_open();
+        my $feed = $self->_get_feed_from_handle( $fh );
         $self->_new_entry( $feed, \%p );
         $self->_write_feed( $fh, $feed );
         return $fh;
     };
+
     # Take care to avoid clobbering $@.
     my $err = $@;
     eval { $self->_unlock_and_close( $fh ) };
     die $err if $err;
     return;
+}
+
+{
+    my $i;
+    sub _default_id {
+        my $self = shift;
+        return join "/", hostname(), time(), $$, ++$i;
+    }
 }
 
 sub _get_feed_from_handle {
@@ -104,6 +115,7 @@ sub _new_entry {
     my $entry = XML::Atom::Entry->new( Version => '1.0' );
     $entry->title( "$args->{message}" );
     $entry->content( "$args->{message}" );
+    $entry->id( "$args->{id}" );
 
     my $now = _now();
     $feed->updated( $now );
@@ -260,6 +272,16 @@ The actual log message.
 =item I<level> [mandatory]
 
 The level of the message.  See L<Log::Dispatch> for a full list.
+
+=item I<id> [optional]
+
+Each entry requires an id in order for the feed as a whole to be a valid
+Atom document.  It's used by readers of Atom documents to determine
+whether or not an entry has been seen previously.
+
+If not specified, this will default to the current time plus the pid
+plus the hostname plus a monotonically increasing integer.  eg:
+fred.example.com/1133946771/20827/2
 
 =back
 

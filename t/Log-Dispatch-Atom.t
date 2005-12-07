@@ -7,6 +7,7 @@ use warnings;
 use File::Temp qw( tempfile );
 use Log::Dispatch::Atom;
 use POSIX qw( strftime );
+use Sys::Hostname;
 use Test::More 'no_plan';
 use XML::Atom::Feed;
 
@@ -24,6 +25,7 @@ sub test_basics {
     isa_ok( $log, 'Log::Dispatch::Atom' );
     can_ok( $log, qw( log ) );
 
+    my $now = time;
     $log->log( level => 'info', message => 'hello world' );
     my $feed = eval { XML::Atom::Feed->new( $fn ) };
     is( $@, '', 'log(1) No problems parsing feed.' );
@@ -32,7 +34,10 @@ sub test_basics {
     is( $entries[0]->title, 'hello world', 'log(1) made correct title' );
     is( $entries[0]->content->body,
         'hello world', 'log(1) made correct content' );
+    my $expected_id = join "/", hostname(), $now, $$, 1;
+    is( $entries[0]->id, $expected_id, 'log(1) made correct id' );
 
+    $now = time;
     $log->log( level => 'info', message => 'hello world#2' );
     $feed = eval { XML::Atom::Feed->new( $fn ) };
     is( $@, '', 'log(2) No problems parsing feed.' );
@@ -44,6 +49,8 @@ sub test_basics {
         'hello world#2',
         'log(2) made correct content'
     );
+    $expected_id = join "/", hostname(), $now, $$, 2;
+    is( $entries[0]->id, $expected_id, 'log(2) made correct id' );
     return;
 }
 
