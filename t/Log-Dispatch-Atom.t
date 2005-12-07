@@ -76,6 +76,16 @@ sub test_feed_extras {
         'Fred Flintstone',
         'test_feed_extras: author/name',
     );
+    is(
+        $feed->author->email,
+        'fred@flintstones.com',
+        'test_feed_extras: author/email',
+    );
+    is(
+        $feed->author->uri,
+        'http://fred.flintstones.com/',
+        'test_feed_extras: author/uri',
+    );
     return;
 }
 

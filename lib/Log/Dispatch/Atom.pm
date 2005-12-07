@@ -86,6 +86,10 @@ sub _get_feed_from_handle {
             my $author = XML::Atom::Person->new( Version => '1.0' );
             $author->name( $self->{ feed_author }{ name } )
                 if $self->{ feed_author }{ name };
+            $author->email( $self->{ feed_author }{ email } )
+                if $self->{ feed_author }{ email };
+            $author->uri( $self->{ feed_author }{ uri } )
+                if $self->{ feed_author }{ uri };
             $feed->author( $author );
         }
         return $feed;
@@ -224,7 +228,19 @@ If not specified, it will be omitted, which is in violation of the
 Atom specification.  For more information, see
 L<http://www.atomenabled.org/developers/syndication/#requiredFeedElements>.
 
-B<XXX> This should probably just use the I<name> parameter.
+B<XXX> This should probably just use the I<name> parameter.  What do you
+think?  Let me know.
+
+=item I<feed_author> [optional]
+
+The author details of a feed.  This is specified as a hash reference,
+which must contain one or more of the three keys I<name>, I<email> and
+I<uri>.
+
+In order to create a valid Atom feed, you must either supply an author
+in every single entry (log message), or ensure that the feed itself has
+an author.  The latter is probably the easier solution, so I recommend
+this parameter be supplied.
 
 =back
 
